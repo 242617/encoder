@@ -12,6 +12,14 @@ type Dimensions struct {
 	width, height int
 }
 
+func (dimensions Dimensions) Width() int {
+	return dimensions.width
+}
+
+func (dimensions Dimensions) Height() int {
+	return dimensions.height
+}
+
 func (dimensions *Dimensions) Set(value string) error {
 	matched, err := regexp.MatchString(`^\d{1,4}:\d{1,4}$`, value)
 	if err != nil || !matched {
