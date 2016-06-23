@@ -1,11 +1,12 @@
 package main
 
 import (
-	"./local"
+	"./lib"
+	"flag"
 	"fmt"
 	"image"
 	"image/color"
-	png "image/png"
+	jpeg "image/jpeg"
 	"log"
 	"os"
 )
@@ -14,37 +15,43 @@ const (
 	HELP = `Image Encoder v0.1
 Returns array of image pixels
 Usage:
-	-m, --mode         string   Output mode: "bw" (default), "gs"
-	-d, --dimensions   string   Dimensions of result array (e.g. 64:48)
-	-i, --input        string   Input file (*.png, *.gif, *.jpg) (e.g. "input.gif")
-	-p, --preview      bool     Preview result, saves "output.png" if true
-	-h, --help         bool     Help page
+	-dimensions   string   Target dimensions (e.g. 64:48)
+	-input        string   Input file (*.png, *.gif, *.jpg) (e.g. "input.gif")
+	-threshold    uint     Gray color threshold
+	-preview      bool     Preview result, saves "output.jpg" if true
+	-help         bool     Help page
 	`
 )
 
 func main() {
 	config := local.Config{}
-	config.Init()
+	config.Width, config.Height = 64, 48
+	flag.Var(&config.Dimensions, "dimensions", "Target dimensions")
+	flag.StringVar(&config.Input, "input", "", "Input file")
+	flag.UintVar(&config.Threshold, "threshold", 160, "Gray color threshold")
+	flag.BoolVar(&config.Preview, "preview", false, "Preview result")
+	flag.BoolVar(&config.Help, "help", false, "Help page")
+	flag.Parse()
 	fmt.Println(config)
 
-	if config.Help() {
+	if config.Help {
 		fmt.Printf(fmt.Sprint(HELP))
 		return
 	}
 
 	encoder := local.Encoder{}
-	img := load(config.Input())
-	pixels := encoder.Process(img, config.Mode, config.Dimensions)
+	img := load(config.Input)
+	pixels := encoder.Process(img, config.Dimensions, config.Threshold)
 	fmt.Println(pixels)
 
-	if config.Preview() {
-		target := image.NewGray(image.Rect(0, 0, config.Dimensions.Width(), config.Dimensions.Height()))
+	if config.Preview {
+		target := image.NewGray(image.Rect(0, 0, config.Width, config.Height))
 		for index, value := range pixels {
-			x := index % config.Dimensions.Width()
-			y := int(float64(index) / float64(config.Dimensions.Width()))
+			x := index % config.Width
+			y := int(float64(index) / float64(config.Width))
 			target.Set(x, y, color.Gray{value})
 		}
-		save(target, "preview.png")
+		save(target, "preview.jpg")
 	}
 }
 
@@ -67,7 +74,7 @@ func save(img image.Image, path string) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	err = png.Encode(file, img)
+	err = jpeg.Encode(file, img, nil)
 	if err != nil {
 		log.Fatal(err)
 	}

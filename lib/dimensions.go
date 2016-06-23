@@ -9,15 +9,7 @@ import (
 )
 
 type Dimensions struct {
-	width, height int
-}
-
-func (dimensions Dimensions) Width() int {
-	return dimensions.width
-}
-
-func (dimensions Dimensions) Height() int {
-	return dimensions.height
+	Width, Height int
 }
 
 func (dimensions *Dimensions) Set(value string) error {
@@ -27,11 +19,11 @@ func (dimensions *Dimensions) Set(value string) error {
 	}
 
 	args := strings.SplitN(value, ":", 2)
-	dimensions.width, _ = strconv.Atoi(args[0])
-	dimensions.height, _ = strconv.Atoi(args[1])
+	dimensions.Width, _ = strconv.Atoi(args[0])
+	dimensions.Height, _ = strconv.Atoi(args[1])
 	return nil
 }
 
 func (dimensions *Dimensions) String() string {
-	return fmt.Sprintf("Dimensions {width:%d, height:%d}", dimensions.width, dimensions.height)
+	return fmt.Sprintf("Dimensions {Width:%d, Height:%d}", dimensions.Width, dimensions.Height)
 }
