@@ -1,6 +1,7 @@
 package local
 
 import (
+	// "fmt"
 	"image"
 	_ "image/gif"
 	_ "image/jpeg"
@@ -9,17 +10,18 @@ import (
 )
 
 type Encoder struct {
+	// TODO: Провести всё к uint
+	// TODO: Убрать структуру и оставить одну функцию
 }
 
-func (encoder *Encoder) Process(img image.Image, dimensions Dimensions, threshold uint) []uint8 {
+func (encoder *Encoder) Process(img image.Image, dimensions Dimensions, threshold uint) ([]uint8, []uint8) {
 	bounds := Dimensions{img.Bounds().Max.X, img.Bounds().Max.Y}
 	if bounds.Width < dimensions.Width || bounds.Height < dimensions.Height {
 		log.Fatal("Result image must be larger than input one!")
 	}
 
 	coords := make([]Point, dimensions.Width*dimensions.Height)
-	var index int
-	for i := 0; i < dimensions.Height; i++ {
+	for index, i := 0, 0; i < dimensions.Height; i++ {
 		y := (float32(i) + .5) * (float32(bounds.Height) / float32(dimensions.Height))
 		for j := 0; j < dimensions.Width; j++ {
 			x := (float32(j) + .5) * (float32(bounds.Width) / float32(dimensions.Width))
@@ -28,16 +30,26 @@ func (encoder *Encoder) Process(img image.Image, dimensions Dimensions, threshol
 		}
 	}
 
-	pixels := make([]uint8, len(coords))
-	for index, value := range coords {
+	pix := make([]byte, len(coords))
+	for i, value := range coords {
 		r, g, b, _ := img.At(value.X, value.Y).RGBA()
-		grayscale := uint8((299*r + 587*g + 114*b + 500) / 1000)
-		if grayscale >= uint8(threshold) {
-			grayscale = 0xff
-		} else {
-			grayscale = 0x00
+		grayscale := (299*r + 587*g + 114*b + 500) / 1000
+		// pix[i] = grayscale
+		if byte(grayscale) >= byte(threshold) {
+			pix[i] = 1
 		}
-		pixels[index] = grayscale
 	}
-	return pixels
+
+	length := 8
+	res := make([]byte, len(pix)/length)
+	for i, value := range pix {
+		// x := i % dimensions.Width
+		y := i / dimensions.Width
+		r := y / length
+		n := y % length
+		c := i%dimensions.Width + dimensions.Width*r
+		res[c] = byte(res[c]) | byte(value<<byte(n))
+	}
+
+	return res, pix
 }

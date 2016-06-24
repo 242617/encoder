@@ -11,6 +11,8 @@ import (
 	"os"
 )
 
+// TODO: Убрать -dimensions - всегда 64x48
+
 const (
 	HELP = `Image Encoder v0.1
 Returns array of image pixels
@@ -41,7 +43,8 @@ func main() {
 
 	encoder := local.Encoder{}
 	img := load(config.Input)
-	pixels := encoder.Process(img, config.Dimensions, config.Threshold)
+	result, pixels := encoder.Process(img, config.Dimensions, config.Threshold)
+	fmt.Println(result)
 	fmt.Println(pixels)
 
 	if config.Preview {
