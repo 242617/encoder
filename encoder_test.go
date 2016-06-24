@@ -38,13 +38,43 @@ func TestWhiteAndBlackEncoding(t *testing.T) {
 	black, white := 0, 0
 	for _, v := range res {
 		if v > 127 {
-			black++
-		} else {
 			white++
+		} else {
+			black++
 		}
 	}
 	if black != white {
 		t.Fatal("Incorrect white and black image encoding!")
+	}
+}
+
+func TestThresholdEncoding(t *testing.T) {
+	img := load("test/gray.png")
+
+	black, white := 0, 0
+	res, _ := encode(img, 255)
+	for _, v := range res {
+		if v > 127 {
+			white++
+		} else {
+			black++
+		}
+	}
+	if black != 384 || white != 0 {
+		t.Fatal("Incorrect threshold image encoding!")
+	}
+
+	black, white = 0, 0
+	res, _ = encode(img, 1)
+	for _, v := range res {
+		if v > 127 {
+			white++
+		} else {
+			black++
+		}
+	}
+	if black != 0 || white != 384 {
+		t.Fatal("Incorrect threshold image encoding!")
 	}
 }
 
