@@ -1,35 +1,37 @@
 package main
 
 import (
-	"./lib"
 	"flag"
 	"fmt"
 	"image"
 	"image/color"
-	jpeg "image/jpeg"
+	_ "image/gif"
+	_ "image/jpeg"
+	png "image/png"
 	"log"
 	"os"
 )
 
-// TODO: Убрать -dimensions - всегда 64x48
 // TODO: Отформатировать вывод данных
+// TODO: Второй аргумент - изображение
+// TODO: На вход - массив изображений - тогда для каждого изображения создаётся текстовый файл с байтами для дисплея
 
 const (
-	HELP = `Image Encoder v0.1
-Returns array of image pixels
+	HELP = `Image Encoder v0.2
+Returns array of image pixels for 64x48 OLED display
 Usage:
-	-dimensions   string   Target dimensions (e.g. 64:48)
 	-input        string   Input file (*.png, *.gif, *.jpg) (e.g. "input.gif")
 	-threshold    uint     Gray color threshold
 	-preview      bool     Preview result, saves "output.jpg" if true
 	-help         bool     Help page
 	`
+	LENGTH int = 8
+	WIDTH  int = 64
+	HEIGHT int = 48
 )
 
 func main() {
-	config := lib.Config{}
-	config.Width, config.Height = 64, 48
-	flag.Var(&config.Dimensions, "dimensions", "Target dimensions")
+	config := Config{}
 	flag.StringVar(&config.Input, "input", "", "Input file")
 	flag.UintVar(&config.Threshold, "threshold", 160, "Gray color threshold")
 	flag.BoolVar(&config.Preview, "preview", false, "Preview result")
@@ -42,18 +44,63 @@ func main() {
 	}
 
 	img := load(config.Input)
-	result, pixels := lib.Encode(img, config.Dimensions, config.Threshold)
+	result, pixels := encode(img, config.Threshold)
 	fmt.Println(result)
 
 	if config.Preview {
-		target := image.NewGray(image.Rect(0, 0, config.Width, config.Height))
+		target := image.NewGray(image.Rect(0, 0, WIDTH, HEIGHT))
 		for index, value := range pixels {
-			x := index % config.Width
-			y := int(float64(index) / float64(config.Width))
+			x := index % WIDTH
+			y := int(float64(index) / float64(WIDTH))
 			target.Set(x, y, color.Gray{value})
 		}
-		save(target, "preview.jpg")
+		save(target, "preview.png")
 	}
+}
+
+type Config struct {
+	Input     string
+	Threshold uint
+	Preview   bool
+	Help      bool
+}
+
+type Point struct {
+	X, Y int
+}
+
+func encode(img image.Image, threshold uint) ([]uint8, []uint8) {
+	if img.Bounds().Max.X < WIDTH || img.Bounds().Max.Y < HEIGHT {
+		log.Fatal("Result image must be larger than input one!")
+	}
+
+	coords := make([]Point, WIDTH*HEIGHT)
+	for index, i := 0, 0; i < HEIGHT; i++ {
+		y := (float32(i) + .5) * (float32(img.Bounds().Max.Y) / float32(HEIGHT))
+		for j := 0; j < WIDTH; j++ {
+			x := (float32(j) + .5) * (float32(img.Bounds().Max.X) / float32(WIDTH))
+			coords[index] = Point{int(x), int(y)}
+			index++
+		}
+	}
+
+	result := make([]byte, len(coords)/LENGTH)
+	preview := make([]byte, len(coords))
+	for i, value := range coords {
+		r, g, b, _ := img.At(value.X, value.Y).RGBA()
+		pixel, grayscale := 0, (299*r+587*g+114*b+500)/1000
+		if byte(grayscale) >= byte(threshold) {
+			pixel = 1
+			preview[i] = 0xff
+		}
+		y := i / WIDTH
+		m := y / LENGTH
+		n := y % LENGTH
+		c := i%WIDTH + WIDTH*m
+		result[c] = byte(result[c]) | byte(pixel<<byte(n))
+	}
+
+	return result, preview
 }
 
 func load(path string) image.Image {
@@ -75,7 +122,7 @@ func save(img image.Image, path string) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	err = jpeg.Encode(file, img, nil)
+	err = png.Encode(file, img)
 	if err != nil {
 		log.Fatal(err)
 	}
