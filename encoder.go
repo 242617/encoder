@@ -10,17 +10,16 @@ import (
 	png "image/png"
 	"log"
 	"os"
+	"strconv"
+	"strings"
 )
-
-// TODO: Отформатировать вывод данных
-// TODO: Второй аргумент - изображение
-// TODO: На вход - массив изображений - тогда для каждого изображения создаётся текстовый файл с байтами для дисплея
 
 const (
 	HELP = `Image Encoder v0.2
-Returns array of image pixels for 64x48 OLED display
+Decodes input_file (*.png, *.gif, *.jpg) and returns uint array for 64x48 OLED display
 Usage:
-	-input        string   Input file (*.png, *.gif, *.jpg) (e.g. "input.gif")
+	encoder [options] input_file
+Options:
 	-threshold    uint     Gray color threshold
 	-preview      bool     Preview result, saves "output.jpg" if true
 	-help         bool     Help page
@@ -32,7 +31,11 @@ Usage:
 
 func main() {
 	config := Config{}
-	flag.StringVar(&config.Input, "input", "", "Input file")
+	if len(os.Args) < 2 {
+		fmt.Printf(fmt.Sprint(HELP))
+		return
+	}
+	config.Input = os.Args[len(os.Args)-1 : len(os.Args)][0]
 	flag.UintVar(&config.Threshold, "threshold", 160, "Gray color threshold")
 	flag.BoolVar(&config.Preview, "preview", false, "Preview result")
 	flag.BoolVar(&config.Help, "help", false, "Help page")
@@ -45,7 +48,7 @@ func main() {
 
 	img := load(config.Input)
 	result, pixels := encode(img, config.Threshold)
-	fmt.Println(result)
+	fmt.Println(format(result))
 
 	if config.Preview {
 		target := image.NewGray(image.Rect(0, 0, WIDTH, HEIGHT))
@@ -69,7 +72,7 @@ type Point struct {
 	X, Y int
 }
 
-func encode(img image.Image, threshold uint) ([]uint8, []uint8) {
+func encode(img image.Image, threshold uint) ([]byte, []byte) {
 	if img.Bounds().Max.X < WIDTH || img.Bounds().Max.Y < HEIGHT {
 		log.Fatal("Result image must be larger than input one!")
 	}
@@ -126,4 +129,12 @@ func save(img image.Image, path string) {
 	if err != nil {
 		log.Fatal(err)
 	}
+}
+
+func format(src []byte) string {
+	res := make([]string, len(src))
+	for i, v := range src {
+		res[i] = strconv.Itoa(int(v))
+	}
+	return strings.Join(res, ",")
 }

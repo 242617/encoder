@@ -1,7 +1,8 @@
 # Image Encoder v0.2
-Returns array of image pixels
+Decodes input_file (*.png, *.gif, *.jpg) and returns uint array for 64x48 OLED display
 ## Usage:
-	-input        string   Input file (*.png, *.gif, *.jpg) (e.g. "input.gif")
+	encoder [options] input_file
+## Options:
 	-threshold    uint     Gray color threshold
 	-preview      bool     Preview result, saves "output.jpg" if true
 	-help         bool     Help page
