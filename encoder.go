@@ -46,8 +46,7 @@ func main() {
 		return
 	}
 
-	img := load(config.Input)
-	result, pixels := encode(img, config.Threshold)
+	result, pixels := encode(load(config.Input), config.Threshold)
 	fmt.Println(format(result))
 
 	if config.Preview {
