@@ -12,6 +12,7 @@ import (
 )
 
 // TODO: Убрать -dimensions - всегда 64x48
+// TODO: Отформатировать вывод данных
 
 const (
 	HELP = `Image Encoder v0.1
@@ -26,7 +27,7 @@ Usage:
 )
 
 func main() {
-	config := local.Config{}
+	config := lib.Config{}
 	config.Width, config.Height = 64, 48
 	flag.Var(&config.Dimensions, "dimensions", "Target dimensions")
 	flag.StringVar(&config.Input, "input", "", "Input file")
@@ -34,18 +35,15 @@ func main() {
 	flag.BoolVar(&config.Preview, "preview", false, "Preview result")
 	flag.BoolVar(&config.Help, "help", false, "Help page")
 	flag.Parse()
-	fmt.Println(config)
 
 	if config.Help {
 		fmt.Printf(fmt.Sprint(HELP))
 		return
 	}
 
-	encoder := local.Encoder{}
 	img := load(config.Input)
-	result, pixels := encoder.Process(img, config.Dimensions, config.Threshold)
+	result, pixels := lib.Encode(img, config.Dimensions, config.Threshold)
 	fmt.Println(result)
-	fmt.Println(pixels)
 
 	if config.Preview {
 		target := image.NewGray(image.Rect(0, 0, config.Width, config.Height))
