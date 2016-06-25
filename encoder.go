@@ -22,7 +22,8 @@ Usage:
 Options:
 	-threshold    uint     Gray color threshold
 	-preview      bool     Preview result, saves "output.jpg" if true
-	-help         bool     Help page`
+	-help         bool     Help page
+`
 	LENGTH int = 8
 	WIDTH  int = 64
 	HEIGHT int = 48
