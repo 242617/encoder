@@ -1,4 +1,4 @@
-package main
+package encoder
 
 import (
 	"flag"
@@ -47,7 +47,7 @@ func main() {
 	}
 
 	result, pixels := encode(load(config.Input), config.Threshold)
-	fmt.Println(format(result))
+	fmt.Println(Format(result))
 
 	if config.Preview {
 		target := image.NewGray(image.Rect(0, 0, WIDTH, HEIGHT))
@@ -130,7 +130,7 @@ func save(img image.Image, path string) {
 	}
 }
 
-func format(src []byte) string {
+func Format(src []byte) string {
 	res := make([]string, len(src))
 	for i, v := range src {
 		res[i] = strconv.Itoa(int(v))
