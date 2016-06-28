@@ -90,7 +90,7 @@ func encode(img image.Image, threshold uint) ([]byte, []byte) {
 	preview := make([]byte, len(coords))
 	for i, value := range coords {
 		r, g, b, _ := img.At(value.X, value.Y).RGBA()
-		pixel, grayscale := 0, (299*r+587*g+114*b+500)/1000
+		pixel, grayscale := 0, (2126*r+7152*g+722*b+500)/10000
 		if byte(grayscale) >= byte(threshold) {
 			pixel = 1
 			preview[i] = 0xff
